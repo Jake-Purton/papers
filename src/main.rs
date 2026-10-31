@@ -1,3 +1,4 @@
+mod books;
 mod watch;
 
 use std::path::Path;
@@ -6,6 +7,7 @@ use std::time::Duration;
 use tokio::sync::mpsc::channel;
 
 use axum::{Router, routing::get};
+use books::{book, books};
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
 use rusqlite::Connection;
 
@@ -48,7 +50,7 @@ async fn main() {
         .unwrap();
 
     // rescan on init, blocking so we don't overlap
-    watch::rescan(&books_dir, &db_dir);
+    let _ = watch::rescan(&books_dir, &db_dir);
 
     {
         let books_dir = books_dir.clone();
@@ -67,7 +69,9 @@ async fn main() {
 
     let port: String = std::env::var("PORT").unwrap_or("8080".into());
 
-    let pages: Router = Router::new();
+    let pages: Router = Router::new()
+        .route("/books", get(books))
+        .route("/books/{id}", get(book));
 
     let app = Router::new().merge(pages);
 
