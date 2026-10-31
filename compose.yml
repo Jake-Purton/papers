@@ -3,15 +3,15 @@ services:
     build: .
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "35000:35000"
     environment:
-      PORT: 8080
+      PORT: 35000
       BOOKS_DIR: /data/books
       DB_PATH: /data/db/database.db
       STATIC_DIR: /app/static
     volumes:
       # your book library: drop files here and the watcher picks them up
-      - ./data/books:/data/books
+      - /mnt/media/hdd/books:/data/books
       # sqlite db lives in a named volume so it survives rebuilds
       - papers-db:/data/db
 
