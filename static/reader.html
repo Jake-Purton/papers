@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- EPUBs can contain scripts, and foliate-js renders them from same-origin blob: URLs.
+             Only our own scripts may run: https://github.com/johnfactotum/foliate-js#security -->
+        <meta http-equiv="Content-Security-Policy" content="default-src 'self' blob:; script-src 'self'; style-src 'self' blob: 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self' blob: data:; media-src 'self' blob:; connect-src 'self' blob: data:; frame-src 'self' blob: data:; object-src 'self' blob:; form-action 'none'; base-uri 'none'">
+        <title>Reader · Papers</title>
+        <meta name="color-scheme" content="light dark">
+        <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='6' y='3' width='20' height='26' rx='3' fill='%232f5d50'/%3E%3Cpath d='M11 10h10M11 15h10M11 20h6' stroke='%23fff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
+        <link rel="stylesheet" href="css/app.css">
+        <link rel="stylesheet" href="css/reader.css">
+        <script src="js/theme-init.js"></script>
+    </head>
+    <body class="reader">
+        <header class="rbar">
+            <a class="icon-button back" id="back" href="./" aria-label="Back to library"><span>Library</span></a>
+
+            <div class="rtitle">
+                <span class="t" id="title"></span>
+                <span class="a" id="author"></span>
+            </div>
+
+            <div class="ractions">
+                <button class="icon-button" id="toc-button" type="button" aria-label="Contents" title="Contents (t)" hidden></button>
+                <div class="pop-wrap">
+                    <button class="icon-button" id="type-button" type="button" aria-label="Appearance" title="Appearance" aria-expanded="false" hidden></button>
+                    <div class="popover" id="type-pop" hidden>
+                        <div>
+                            <div class="label">Theme</div>
+                            <div class="swatches" id="themes">
+                                <button type="button" data-theme="auto"><span class="sw auto">Aa</span>Auto</button>
+                                <button type="button" data-theme="light"><span class="sw light">Aa</span>Light</button>
+                                <button type="button" data-theme="sepia"><span class="sw sepia">Aa</span>Sepia</button>
+                                <button type="button" data-theme="dark"><span class="sw dark">Aa</span>Dark</button>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="label">Text size</div>
+                            <div class="stepper">
+                                <button type="button" class="small" id="smaller" aria-label="Smaller text">A</button>
+                                <output id="size"></output>
+                                <button type="button" class="large" id="larger" aria-label="Larger text">A</button>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="label">Layout</div>
+                            <div class="segmented" id="flows">
+                                <button type="button" data-flow="paginated">Pages</button>
+                                <button type="button" data-flow="scrolled">Scroll</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <a class="icon-button" id="download" aria-label="Download" title="Download"></a>
+                <button class="icon-button" id="fullscreen" type="button" aria-label="Full screen" title="Full screen (f)"></button>
+            </div>
+        </header>
+
+        <main class="stage" id="stage">
+            <div class="status"><div class="spinner" aria-label="Loading"></div></div>
+        </main>
+
+        <footer class="rfoot" id="foot" hidden>
+            <span class="chapter" id="chapter"></span>
+            <input class="slider" id="slider" type="range" min="0" max="1" step="0.001" value="0" aria-label="Position in book">
+            <span class="pct" id="pct"></span>
+        </footer>
+
+        <div class="scrim" id="scrim"></div>
+        <aside class="drawer" id="drawer" aria-label="Contents">
+            <header>Contents <button class="icon-button" id="drawer-close" type="button" aria-label="Close contents"></button></header>
+            <nav id="toc"></nav>
+        </aside>
+
+        <script type="module" src="js/reader.js"></script>
+    </body>
+</html>

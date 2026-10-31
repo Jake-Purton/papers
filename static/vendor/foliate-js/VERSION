@@ -1,0 +1,3 @@
+foliate-js https://github.com/johnfactotum/foliate-js
+commit 78914aef4466eb960965702401634c2cb348e9b1 (2026-05-01)
+vendor/pdfjs omitted: PDFs use the browser viewer for now

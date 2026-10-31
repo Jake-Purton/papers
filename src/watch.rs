@@ -1,14 +1,19 @@
+use std::collections::{HashMap, HashSet};
 use std::io::Read;
 use std::path::Path;
 use std::println;
+use std::time::UNIX_EPOCH;
 
-use rusqlite::Connection;
+use rusqlite::params;
 use std::fs::{self, File};
 use std::path::PathBuf;
 use zip::ZipArchive;
 
-pub fn rescan(books_dir: &Path, db_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
-    let conn = Connection::open(db_dir)?;
+use crate::db;
+use crate::meta::{self, Meta};
+
+pub fn rescan(books_dir: &Path, db_file: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    let conn = db::open(db_file)?;
 
     // Scan files and update database
     println!("Rescanning, checking for new files:");
@@ -16,14 +21,36 @@ pub fn rescan(books_dir: &Path, db_dir: &Path) -> Result<(), Box<dyn std::error:
 
     scan_directory(books_dir, 0, &mut files)?;
 
+    let found: HashSet<String> = files
+        .iter()
+        .map(|p| p.to_string_lossy().into_owned())
+        .collect();
+
+    let known: HashMap<String, Option<i64>> = conn
+        .prepare("SELECT filepath, mtime FROM papers")?
+        .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?
+        .collect::<rusqlite::Result<_>>()?;
+
     for path in files {
-        let valid = match path
+        let filepath = path.to_string_lossy();
+
+        let metadata = fs::metadata(&path)?;
+        let size = metadata.len() as i64;
+        let mtime = metadata.modified()?.duration_since(UNIX_EPOCH)?.as_secs() as i64;
+
+        // unchanged since the last scan, nothing to re-read
+        let previous = known.get(&*filepath);
+        if previous == Some(&Some(mtime)) {
+            continue;
+        }
+
+        let format = path
             .extension()
             .and_then(|e| e.to_str())
             .unwrap_or("")
-            .to_lowercase()
-            .as_str()
-        {
+            .to_lowercase();
+
+        let valid = match format.as_str() {
             "pdf" => is_valid_pdf(&path),
             "epub" => is_valid_epub(&path),
             _ => false,
@@ -34,14 +61,29 @@ pub fn rescan(books_dir: &Path, db_dir: &Path) -> Result<(), Box<dyn std::error:
             continue;
         }
 
-        let filepath = path.to_string_lossy();
+        let meta = match format.as_str() {
+            "epub" => meta::epub(&path),
+            _ => Meta::default(),
+        };
+        let title = meta.title.unwrap_or_else(|| meta::title_from_filename(&path));
 
-        let inserted = conn.execute(
-            "INSERT OR IGNORE INTO papers (filepath) VALUES (?1)",
-            [&*filepath],
+        conn.execute(
+            "INSERT INTO papers (filepath, format, title, author, cover, size, mtime, added_at)
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, unixepoch())
+            ON CONFLICT (filepath) DO UPDATE SET
+                format = excluded.format,
+                title = excluded.title,
+                author = excluded.author,
+                cover = excluded.cover,
+                size = excluded.size,
+                mtime = excluded.mtime,
+                added_at = coalesce(papers.added_at, excluded.added_at)",
+            params![&*filepath, format, title, meta.author, meta.cover, size, mtime],
         )?;
 
-        if inserted > 0 {
+        if previous.is_some() {
+            println!("Updated: {}", filepath);
+        } else {
             println!("Added: {}", filepath);
         }
     }
@@ -56,10 +98,11 @@ pub fn rescan(books_dir: &Path, db_dir: &Path) -> Result<(), Box<dyn std::error:
 
     let mut orphans = Vec::new();
 
+    // anything the scan didn't find: deleted, moved out of books_dir, or stored under an old path
     for paper in papers {
         let (id, filepath) = paper?;
 
-        if !Path::new(&filepath).exists() {
+        if !found.contains(&filepath) {
             orphans.push((id, filepath));
         }
     }

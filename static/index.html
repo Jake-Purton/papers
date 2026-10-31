@@ -1,15 +1,54 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
-        <title>My App</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Papers</title>
+        <meta name="color-scheme" content="light dark">
+        <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='6' y='3' width='20' height='26' rx='3' fill='%232f5d50'/%3E%3Cpath d='M11 10h10M11 15h10M11 20h6' stroke='%23fff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
+        <link rel="stylesheet" href="css/app.css">
+        <script src="js/theme-init.js"></script>
     </head>
     <body>
-        <h1>Hello!</h1>
+        <div class="page">
+            <header class="top">
+                <h1 class="brand">Papers <span class="count" id="count"></span></h1>
 
-        <script>
-            console.log("Hello from JavaScript!");
+                <label class="search">
+                    <span class="visually-hidden">Search</span>
+                    <span id="search-icon"></span>
+                    <input id="q" type="search" placeholder="Search titles, authors, files" autocomplete="off" spellcheck="false">
+                    <kbd>/</kbd>
+                    <button class="icon-button clear" id="clear" type="button" aria-label="Clear search"></button>
+                </label>
 
-            document.querySelector("h1").textContent = "Updated!";
-        </script>
+                <div class="actions">
+                    <button class="icon-button" id="view-list" type="button" aria-label="List view"></button>
+                    <button class="icon-button" id="view-grid" type="button" aria-label="Grid view"></button>
+                    <button class="icon-button" id="theme" type="button"></button>
+                </div>
+            </header>
+
+            <div class="toolbar">
+                <div class="chips" id="chips"></div>
+                <label class="sort">
+                    Sort
+                    <select id="sort">
+                        <option value="recent">Recently opened</option>
+                        <option value="added">Recently added</option>
+                        <option value="title">Title</option>
+                        <option value="author">Author</option>
+                    </select>
+                </label>
+            </div>
+
+            <main id="results" aria-live="polite">
+                <div class="skeleton" aria-hidden="true"><div></div><div></div><div></div><div></div><div></div></div>
+            </main>
+
+            <footer class="foot" id="foot"></footer>
+        </div>
+
+        <script type="module" src="js/library.js"></script>
     </body>
 </html>
