@@ -2,8 +2,11 @@ services:
   papers:
     build: .
     restart: unless-stopped
-    ports:
-      - "35000:35000"
+    networks:
+      default:
+      tunnel:
+        aliases:
+          - papers
     environment:
       PORT: 35000
       BOOKS_DIR: /data/books
@@ -14,6 +17,10 @@ services:
       - /mnt/media/hdd/books:/data/books
       # sqlite db lives in a named volume so it survives rebuilds
       - papers-db:/data/db
+
+networks:
+  tunnel:
+    external: true
 
 volumes:
   papers-db:
